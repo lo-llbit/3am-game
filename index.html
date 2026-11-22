@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>لعبة: طلب الساعة 3 الفجر</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;800&display=swap" rel="stylesheet">
+<style>
+:root{--page:#e8e4dc;--ink:#f4efe6;--warm:#ffb84d;--night:#070b18;--bad:#e5484d;--good:#4cc38a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#04060c}}
+:root[data-theme="dark"]{--page:#04060c}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;height:100%;background:var(--page);display:grid;place-items:center;overflow:hidden;font-family:'Tajawal',system-ui,'Segoe UI',Tahoma,sans-serif}
+#stage{position:relative;overflow:hidden;background:var(--night);container-type:size;aspect-ratio:9/16;
+ width:min(100vw,calc((100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))*9/16));
+ width:min(100vw,calc((100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))*9/16));color:var(--ink)}
+svg{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;transition:filter 1.5s}
+.g{opacity:0;transition:opacity .8s}
+#stage[data-bg=street] .street,#stage[data-bg=door] .door-g,#stage[data-bg=inside] .inside,#stage[data-bg=porch] .porch{opacity:1}
+.rain{position:absolute;inset:0;z-index:2;pointer-events:none;transition:opacity 1.5s}
+.rain i{position:absolute;top:-12cqh;width:1px;height:6cqh;background:linear-gradient(transparent,#9fc1e8);animation:fall .7s linear infinite}
+#stage[data-bg=inside] .rain,#stage[data-bg=porch] .rain{opacity:.3}
+#stage[data-bg=inside] .rain{opacity:0}
+.vig{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 45%,rgba(0,0,0,.6))}
+.fx{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity 1.2s}
+.death .fx{opacity:1;background:radial-gradient(ellipse at center,rgba(150,0,0,.15),rgba(110,0,0,.75));animation:red 2.4s ease-out}
+.live .fx{opacity:1;background:linear-gradient(0deg,rgba(255,196,120,.5),transparent 55%)}
+.death svg{filter:grayscale(1) brightness(.45);animation:shake .5s}
+.live svg{filter:brightness(1.25) saturate(1.1)}
+#ui{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:stretch;padding:9cqh 6cqw 15cqh}
+#clk{align-self:center;font-weight:800;font-size:4.6cqw;letter-spacing:.4cqw;padding:.8cqw 3.4cqw;border-radius:99px;background:rgba(5,7,13,.55);border:1px solid rgba(255,255,255,.18)}
+#txt{margin-top:5cqh;text-align:center;font-weight:800;font-size:5.8cqw;line-height:1.65;padding:3cqw 4cqw;border-radius:3cqw;background:rgba(5,7,13,.62);text-shadow:0 .4cqw 1.6cqw rgba(0,0,0,.8);opacity:0}
+#txt.in{animation:rise .7s ease-out forwards}
+#txt b{display:block;font-size:7.6cqw;color:var(--warm);margin:1.4cqw 0}
+#txt small{display:block;margin-top:2cqw;font-size:3.8cqw;font-weight:500;color:#c9d0e0}
+.tag{display:inline-block;font-size:4cqw;padding:.4cqw 3cqw;border-radius:99px;color:var(--night)}
+.tag.bad{background:var(--bad)}.tag.good{background:var(--good)}
+#ch{margin-top:auto;display:flex;flex-direction:column;gap:2cqh}
+#ch button,#go{font:800 5.4cqw/1.4 'Tajawal',system-ui,sans-serif;color:var(--ink);background:rgba(5,7,13,.74);border:2px solid var(--warm);border-radius:3cqw;padding:2.8cqw 4cqw;cursor:pointer;opacity:0;animation:up .5s ease-out forwards}
+#ch button:active{background:var(--warm);color:var(--night)}
+@media (hover:hover){#ch button:hover{background:var(--warm);color:var(--night)}}
+#ch button:focus-visible,#go:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.ov{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.6cqh;text-align:center;padding:0 10cqw;background:rgba(5,7,13,.7);transition:opacity .4s}
+.ov.hide{opacity:0;pointer-events:none}
+.ov h1{margin:0;font-size:9cqw;line-height:1.3}
+.ov p{margin:0;font-size:4.4cqw;color:#c9d0e0;line-height:1.8}
+#go{background:var(--warm);color:var(--night);border:0;border-radius:99px;font-size:6cqw;padding:2cqw 9cqw;animation:none;opacity:1}
+.scoot{animation:ride 6s linear infinite}
+.wheel{transform-box:fill-box;transform-origin:center;animation:spin .45s linear infinite}
+.glow{animation:fl 3s ease-in-out infinite alternate}
+.door{transform-box:fill-box;transform-origin:100% 50%;transition:transform 1.4s cubic-bezier(.3,.6,.3,1)}
+.man,.spill{opacity:0;transition:opacity 1.2s .6s}
+.open .door{transform:scaleX(.1)}
+.open .man{opacity:1}.open .spill{opacity:.45}
+.eyes{animation:look 2.4s ease-in-out infinite alternate}
+.steam{fill:none;stroke:#fff6e0;stroke-width:2;stroke-linecap:round;animation:steam 3s ease-out infinite}
+.steam.b{animation-delay:1.2s}
+.coil{animation:fl 1.6s ease-in-out infinite alternate}
+@keyframes fall{from{transform:translate(0,0) rotate(12deg)}to{transform:translate(-22cqw,120cqh) rotate(12deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(-3cqh)}to{opacity:1;transform:none}}
+@keyframes up{from{opacity:0;transform:translateY(2cqh)}to{opacity:1;transform:none}}
+@keyframes ride{from{transform:translateX(-130px)}to{transform:translateX(430px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fl{from{opacity:.55}to{opacity:1}}
+@keyframes look{from{transform:translateX(-3px)}to{transform:translateX(3px)}}
+@keyframes steam{0%{transform:translateY(0);opacity:0}30%{opacity:.8}100%{transform:translateY(-16px);opacity:0}}
+@keyframes red{0%,12%{filter:brightness(2.4)}100%{filter:none}}
+@keyframes shake{20%{transform:translate(-8px,3px)}40%{transform:translate(7px,-4px)}60%{transform:translate(-4px,2px)}}
+@media (prefers-reduced-motion:reduce){.rain i,.glow,.eyes,.scoot,.coil,.steam,.wheel{animation:none}.death svg{animation:none}}
+</style>
+</head>
+<body>
+<main id="stage" data-bg="street">
+ <svg viewBox="0 0 360 640" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs>
+   <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070b18"/><stop offset="1" stop-color="#1c2a4a"/></linearGradient>
+   <linearGradient id="in" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd58f"/><stop offset="1" stop-color="#b8661f"/></linearGradient>
+   <linearGradient id="room" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a1a0b"/><stop offset="1" stop-color="#1c0c05"/></linearGradient>
+   <linearGradient id="beam" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff0c4" stop-opacity=".55"/><stop offset="1" stop-color="#fff0c4" stop-opacity="0"/></linearGradient>
+   <linearGradient id="spl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffcf80" stop-opacity=".9"/><stop offset="1" stop-color="#ffcf80" stop-opacity="0"/></linearGradient>
+   <radialGradient id="lamp"><stop offset="0" stop-color="#ffcf80" stop-opacity=".9"/><stop offset="1" stop-color="#ffcf80" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="360" height="640" fill="url(#sky)"/>
+  <!-- الشارع -->
+  <g class="g street">
+   <g fill="#0c1326"><rect x="0" y="250" width="70" height="280"/><rect x="80" y="180" width="60" height="350"/><rect x="150" y="290" width="80" height="240"/><rect x="240" y="210" width="55" height="320"/><rect x="300" y="270" width="70" height="260"/></g>
+   <g fill="#ffb84d" opacity=".7"><rect x="20" y="290" width="8" height="10"/><rect x="92" y="200" width="8" height="10"/><rect x="160" y="330" width="8" height="10"/><rect x="252" y="250" width="8" height="10"/><rect x="316" y="310" width="8" height="10"/></g>
+   <rect y="520" width="360" height="120" fill="#080c18"/>
+   <ellipse cx="180" cy="590" rx="160" ry="10" fill="#6aa6d9" opacity=".12"/>
+   <g><line x1="60" y1="520" x2="60" y2="330" stroke="#1b2540" stroke-width="5"/><circle class="glow" cx="60" cy="330" r="75" fill="url(#lamp)"/><circle cx="60" cy="330" r="5" fill="#ffe6b0"/></g>
+   <g><line x1="295" y1="520" x2="295" y2="300" stroke="#1b2540" stroke-width="5"/><circle class="glow" cx="295" cy="300" r="75" fill="url(#lamp)"/><circle cx="295" cy="300" r="5" fill="#ffe6b0"/></g>
+   <g transform="translate(0,470)"><g class="scoot">
+    <polygon points="104,24 270,-14 270,66" fill="url(#beam)"/>
+    <rect x="0" y="-18" width="34" height="36" rx="4" fill="#19b5a5"/>
+    <path d="M22 50 L40 50 L52 30 L78 30 L90 50 L100 50" stroke="#9db0d4" stroke-width="4" fill="none" stroke-linejoin="round"/>
+    <line x1="92" y1="48" x2="88" y2="8" stroke="#9db0d4" stroke-width="4"/>
+    <line x1="50" y1="28" x2="56" y2="-8" stroke="#ff8a3d" stroke-width="13" stroke-linecap="round"/>
+    <line x1="58" y1="-4" x2="86" y2="8" stroke="#ff8a3d" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="58" cy="-22" r="10" fill="#e9edf7"/><circle cx="104" cy="24" r="4" fill="#fff6d6"/>
+    <g transform="translate(22,50)"><g class="wheel"><circle r="14" fill="#0b1020" stroke="#9db0d4" stroke-width="3"/><line x1="-14" x2="14" stroke="#9db0d4" stroke-width="2"/></g></g>
+    <g transform="translate(100,50)"><g class="wheel"><circle r="14" fill="#0b1020" stroke="#9db0d4" stroke-width="3"/><line x1="-14" x2="14" stroke="#9db0d4" stroke-width="2"/></g></g>
+   </g></g>
+  </g>
+  <!-- الباب -->
+  <g class="g door-g">
+   <rect width="360" height="520" fill="#12182b"/><rect y="520" width="360" height="120" fill="#0a0d18"/>
+   <circle class="glow" cx="180" cy="112" r="85" fill="url(#lamp)"/><rect x="172" y="102" width="16" height="22" rx="3" fill="#ffe6b0"/>
+   <rect x="82" y="132" width="196" height="392" fill="#2a2118"/><rect x="90" y="140" width="180" height="380" fill="url(#in)"/>
+   <g class="man"><path d="M118 520 C118 380 140 300 180 290 C220 300 242 380 242 520Z" fill="#120c07"/><circle cx="180" cy="256" r="26" fill="#120c07"/><g class="eyes" fill="#ffe9c2"><circle cx="171" cy="256" r="2.4"/><circle cx="189" cy="256" r="2.4"/></g></g>
+   <g class="door"><rect x="90" y="140" width="180" height="380" fill="#4a3322"/><g fill="none" stroke="#6b4d33" stroke-width="3"><rect x="104" y="158" width="70" height="140"/><rect x="186" y="158" width="70" height="140"/><rect x="104" y="316" width="70" height="186"/><rect x="186" y="316" width="70" height="186"/></g><circle cx="110" cy="340" r="6" fill="#d9a441"/></g>
+   <path class="spill" d="M90 520 L270 520 L340 640 L20 640Z" fill="url(#spl)"/>
+   <rect x="60" y="520" width="240" height="14" fill="#2a2118"/>
+   <rect x="112" y="486" width="32" height="34" rx="3" fill="#c58a3b"/><rect x="124" y="462" width="9" height="26" rx="2" fill="#9fd0ee" opacity=".85"/>
+  </g>
+  <!-- داخل الغرفة -->
+  <g class="g inside">
+   <rect width="360" height="640" fill="url(#room)"/><rect y="540" width="360" height="100" fill="#150a04"/>
+   <rect x="30" y="140" width="96" height="130" fill="#0b1426" stroke="#5a3a20" stroke-width="5"/><line x1="78" y1="140" x2="78" y2="270" stroke="#5a3a20" stroke-width="3"/>
+   <circle class="glow" cx="280" cy="470" r="110" fill="url(#lamp)"/>
+   <rect x="240" y="430" width="80" height="110" rx="6" fill="#2b2b2b"/>
+   <g fill="#ff6a1f"><rect class="coil" x="250" y="446" width="60" height="8"/><rect class="coil" x="250" y="466" width="60" height="8"/><rect class="coil" x="250" y="486" width="60" height="8"/><rect class="coil" x="250" y="506" width="60" height="8"/></g>
+   <path d="M150 540 C150 470 165 440 190 438 C215 440 230 470 230 540Z" fill="#0e0704"/><circle cx="190" cy="415" r="20" fill="#0e0704"/>
+   <rect x="50" y="506" width="110" height="10" fill="#3a2414"/><rect x="60" y="516" width="8" height="24" fill="#3a2414"/><rect x="142" y="516" width="8" height="24" fill="#3a2414"/>
+   <g fill="#f4efe6"><rect x="75" y="490" width="10" height="14" rx="2"/><rect x="120" y="490" width="10" height="14" rx="2"/></g>
+   <path class="steam" d="M80 486 q-4 -6 0 -11 q4 -5 0 -10"/><path class="steam b" d="M125 486 q-4 -6 0 -11 q4 -5 0 -10"/>
+  </g>
+  <!-- العتبة -->
+  <g class="g porch">
+   <rect width="360" height="520" fill="#12182b"/><rect y="520" width="360" height="120" fill="#0a0d18"/>
+   <rect x="82" y="132" width="196" height="392" fill="#2a2118"/><rect x="90" y="140" width="180" height="380" fill="url(#in)"/>
+   <path d="M90 520 L270 520 L340 640 L20 640Z" fill="url(#spl)" opacity=".45"/><rect x="60" y="520" width="240" height="14" fill="#2a2118"/>
+   <g fill="#120c07"><path d="M122 520 C122 470 130 452 150 450 C170 452 178 470 178 520Z"/><circle cx="150" cy="430" r="17"/><path d="M187 520 C187 478 195 460 215 458 C235 460 243 478 243 520Z"/><circle cx="215" cy="438" r="17"/></g>
+   <g fill="#f4efe6"><rect x="160" y="494" width="10" height="12" rx="2"/><rect x="204" y="498" width="10" height="12" rx="2"/></g>
+   <path class="steam" d="M165 490 q-4 -6 0 -11 q4 -5 0 -10"/><path class="steam b" d="M209 494 q-4 -6 0 -11 q4 -5 0 -10"/>
+  </g>
+ </svg>
+ <div class="rain" id="rain"></div>
+ <div class="vig"></div><div class="fx"></div>
+ <div id="ui"><div id="clk">03:00</div><div id="txt" aria-live="polite"></div><div id="ch"></div></div>
+ <div class="ov" id="ov">
+  <h1>طلب الساعة 3 الفجر</h1>
+  <p>لعبة اختيارات.. كل قرار يوديك لنهاية<br>نجاة أو موت، واللي يقرر أنت</p>
+  <button id="go" type="button">▶ ابدأ اللعبة</button>
+ </div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const stage=$('stage'),clk=$('clk'),txt=$('txt'),ch=$('ch'),ov=$('ov');
+for(let i=0;i<70;i++){const d=document.createElement('i');d.style.left=(Math.random()*125-5)+'%';d.style.animationDuration=(.55+Math.random()*.5)+'s';d.style.animationDelay=(-Math.random())+'s';d.style.opacity=.25+Math.random()*.5;$('rain').appendChild(d)}
+const N={
+start:{bg:'street',t:'03:00',txt:'الساعة 3 الفجر والمطر ما وقف.<br>طلب جديد: قارورة ماي وخبز.<br>نفس العنوان.. للمرة الخامسة.',ch:[['أروح للعنوان','road'],['ألغي الطلب','e_cancel']]},
+road:{bg:'street',t:'03:12',txt:'في الشارع المبلول، سيارة بدون أنوار تقطع عليك من التقاطع!',ch:[['أخفف السرعة وأفرمل بهدوء','door'],['أسرع وأعدي قبلها','e_crash']]},
+door:{bg:'door',t:'03:20',txt:'وصلت.. نفس الباب القديم، ونور خافت من تحته.',ch:[['أطرق الباب','man'],['أترك الطلب وأمشي','e_leave']]},
+man:{bg:'door',o:1,t:'03:21',txt:'يفتح رجل كبير ويقول:<br>«ادخل، البرد برا.. زوجتي توفت قبل شهر والبيت ساكت».',ch:[['أدخل الغرفة','room'],['أقعد معه على العتبة','porch']]},
+room:{bg:'inside',t:'03:30',txt:'الغرفة مسكرة ودفاية الغاز شغالة.<br>راسك يدور وعيونك تثقل..',ch:[['أقعد وأشرب الشاي','e_gas'],['أفتح الشباك وأطلعه برا','e_save']]},
+porch:{bg:'porch',t:'04:10',txt:'قعدتوا على العتبة تحت المطر وشربتوا الماي سوا.<br>وبعد ساعة سألك: «بتجي بكرة؟»',ch:[['أوعده إني أجي','e_door'],['أقول له: ما أقدر','e_no']]}
+};
+const E={
+e_cancel:{k:'s',bg:'street',t:'03:05',h:'نجوت.. بس',txt:'ألغيت الطلب ورجعت لبيتك الدافي.<br>وعمرك ما عرفت ليش كان يطلب كل ليلة.'},
+e_crash:{k:'d',bg:'street',t:'03:14',h:'الشارع المبلول',txt:'السكوتر ما فرمل على الأسفلت الزلق..<br>وانقطع كل شي مع صوت المطر.'},
+e_leave:{k:'s',bg:'door',t:'03:25',h:'طلب بدون طرقة',txt:'تركت القارورة عند الباب ومشيت.<br>والرجل أخذها.. وظل ينتظر طرقة ثانية.'},
+e_gas:{k:'d',bg:'inside',t:'03:50',h:'الدفاية',txt:'الشاي دافي والغرفة أدفى..<br>وغاز بلا ريحة ملا المكان. نمتوا الثنين ولا استيقظتوا.'},
+e_save:{k:'s',bg:'porch',t:'03:45',h:'أنقذته',txt:'فتحت الشباك وسحبت الرجل برا واتصلت بالطوارئ.<br>الدفاية كانت تسرب غاز، وهو نجا بسببك.'},
+e_door:{k:'s',bg:'porch',t:'06:00',h:'الطرقة الحلوة',txt:'رجعت كل ليلة 3 الفجر.. بس ما كنت تحمل طلب، كنت تحمل شاي.<br>والرجل ما عاد يستنى لحاله.'},
+e_no:{k:'s',bg:'door',t:'05:00',h:'مشيت',txt:'مشيت والطلب ما رجع بعدها.<br>بس كل ما طرق أحد بابك، تذكرت عيونه.'}
+};
+const KEY='ends3am';let seen=[];try{seen=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){}
+function pop(el){el.classList.remove('in');void el.offsetWidth;el.classList.add('in')}
+function btn(label,fn,i){const b=document.createElement('button');b.type='button';b.textContent=label;b.style.animationDelay=(.5+i*.15)+'s';b.addEventListener('click',fn);ch.appendChild(b)}
+function go(id){
+ const n=N[id]||E[id];
+ stage.dataset.bg=n.bg;stage.classList.remove('death','live');stage.classList.toggle('open',!!n.o);
+ clk.textContent=n.t;ch.innerHTML='';
+ if(N[id]){txt.innerHTML=n.txt;n.ch.forEach((c,i)=>btn(c[0],()=>go(c[1]),i))}
+ else{
+  if(!seen.includes(id)){seen.push(id);try{localStorage.setItem(KEY,JSON.stringify(seen))}catch(e){}}
+  const d=n.k==='d';
+  stage.classList.add(d?'death':'live');
+  if(d){try{navigator.vibrate&&navigator.vibrate(200)}catch(e){}}
+  txt.innerHTML='<span class="tag '+(d?'bad':'good')+'">'+(d?'نهاية: موت':'نهاية: نجاة')+'</span><b>'+n.h+'</b>'+n.txt+'<small>اكتشفت '+seen.length+' من '+Object.keys(E).length+' نهايات</small>';
+  btn('↻ العب من جديد',()=>go('start'),0);
+ }
+ pop(txt);
+}
+$('go').addEventListener('click',()=>{ov.classList.add('hide');go('start')});
+</script>
+</body>
+</html>
